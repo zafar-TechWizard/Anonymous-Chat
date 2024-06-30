@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chat-container {
+            width: 400px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            overflow-y: scroll;
+            height: 300px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #f2f2f2;
+            border-radius: 8px;
+        }
+        .message p {
+            margin: 5px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        form input, form button {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat App</h1>
+
+    <div class="chat-container" id="message-container">
+        <!-- Messages will be dynamically inserted here -->
+    </div>
+
+    <form id="message-form">
+        <input type="text" id="sender" placeholder="Your Name">
+        <input type="text" id="recipient" placeholder="Recipient's Name">
+        <input type="text" id="content" placeholder="Message">
+        <button type="submit">Send</button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Fetch messages and display them on page load
+        $(document).ready(function() {
+            fetchMessages();
+        });
+
+        // Function to fetch messages from Flask endpoint
+        function fetchMessages() {
+            $.ajax({
+                url: '/get_messages?recipient=global',  // Change 'global' to desired recipient
+                type: 'GET',
+                success: function(response) {
+                    displayMessages(response);
+                }
+            });
+        }
+
+        // Function to display messages on the page
+        function displayMessages(messages) {
+            $('#message-container').empty();
+            messages.forEach(function(msg) {
+                var messageHtml = `<div class="message"><p><strong>${msg.sender}</strong>: ${msg.content}</p></div>`;
+                $('#message-container').append(messageHtml);
+            });
+            // Scroll to the bottom of the chat container
+            var chatContainer = document.getElementById('message-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Submit message form
+        $('#message-form').submit(function(event) {
+            event.preventDefault();
+            var sender = $('#sender').val();
+            var recipient = $('#recipient').val();
+            var content = $('#content').val();
+
+            $.ajax({
+                url: '/send_message',
+                type: 'POST',
+                data: {sender: sender, recipient: recipient, content: content},
+                success: function(response) {
+                    $('#content').val('');  // Clear message input after sending
+                    fetchMessages();  // Refresh messages after sending
+                }
+            });
+        });
+    </script>
+</body>
+</html>
